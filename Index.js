@@ -1,46 +1,61 @@
-const express = require('express');
-const axios = require('axios');
-
-const app = express();
-const port = 3000;
-
-app.get('/', (req, res) => {
-    // GitHub repository details
-    const repoOwner = 'gitcoder-real';
-    const repoName = 'Monke-games-chat';
-
-    // Fetch discussions from the GitHub API
-    axios.get(`https://api.github.com/repos/${repoOwner}/${repoName}/discussions`)
-        .then(response => {
-            const discussions = response.data;
-
-            // Render the chat messages as an HTML list
-            const chatMessages = discussions.map(discussion => `
-                <li>
-                    <h3>${discussion.title}</h3>
-                    <p>${discussion.body}</p>
-                </li>
-            `).join('');
-
-            // Return the HTML page with the chat messages
-            res.send(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>GitHub Chat</title>
-                </head>
-                <body>
-                    <ul>${chatMessages}</ul>
-                </body>
-                </html>
-            `);
-        })
-        .catch(error => {
-            console.error('Failed to fetch discussions:', error);
-            res.status(500).send('Failed to fetch discussions');
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+    <style>
+        #message-box {
+            width: 300px;
+            height: 400px;
+            border: 1px solid #ccc;
+            overflow-y: scroll;
+            padding: 10px;
+        }
+        
+        #message-input {
+            width: 300px;
+        }
+        
+        #send-button {
+            margin-top: 10px;
+        }
+    </style>
+    <script>
+        function sendMessage() {
+            var messageInput = document.getElementById("message-input");
+            var messageBox = document.getElementById("message-box");
+            
+            var message = messageInput.value;
+            if (message.trim() !== "") {
+                var messageElement = document.createElement("div");
+                messageElement.innerText = message;
+                messageBox.appendChild(messageElement);
+                
+                messageInput.value = "";
+                messageBox.scrollTop = messageBox.scrollHeight;
+            }
+        }
+        
+        function saveUsername() {
+            var usernameInput = document.getElementById("username-input");
+            var username = usernameInput.value;
+            localStorage.setItem("username", username);
+        }
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            var usernameInput = document.getElementById("username-input");
+            var savedUsername = localStorage.getItem("username");
+            if (savedUsername) {
+                usernameInput.value = savedUsername;
+            }
         });
-});
-
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+    </script>
+</head>
+<body>
+    <input type="text" id="username-input" placeholder="Enter your username">
+    <button onclick="saveUsername()">Save Username</button>
+    
+    <div id="message-box"></div>
+    <input type="text" id="message-input" placeholder="Type your message">
+    <button id="send-button" onclick="sendMessage()">Send</button>
+</body>
+</html>
